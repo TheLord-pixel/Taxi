@@ -17,6 +17,36 @@ class UserServiceClient {
     public static void updateDriverStatus(Long driverId, String status) {
         new userservice.DriverController().updateDriverStatus(driverId, status);
     }
+
+    public static String getPassengerName(Long id) {
+        var passenger = userservice.PassengerController.getPassengers().get(id);
+        return passenger != null ? passenger.getName() : "Unknown";
+    }
+
+    public static String getDriverName(Long id) {
+        var driver = userservice.DriverController.getDrivers().get(id);
+        return driver != null ? driver.getName() : "Unknown";
+    }
+}
+
+class NotificationServiceClient {
+    private static notificationservice.NotificationController controller;
+
+    public static void setController(notificationservice.NotificationController c) {
+        controller = c;
+    }
+
+    public static void notifyPassenger(Long passengerId, String message) {
+        if (controller != null) {
+            controller.createTask(null, "PASSENGER", String.valueOf(passengerId), message);
+        }
+    }
+
+    public static void notifyDriver(Long driverId, String message) {
+        if (controller != null) {
+            controller.createTask(null, "DRIVER", String.valueOf(driverId), message);
+        }
+    }
 }
 
 public class TripController {
@@ -52,6 +82,17 @@ public class TripController {
             System.out.println("Trip created: " + id + " | Driver: " + availableDriver.getName() +
                     " | Price: $" + price);
 
+            String passengerName = UserServiceClient.getPassengerName(passengerId);
+            String driverName = availableDriver.getName();
+
+            NotificationServiceClient.notifyPassenger(passengerId,
+                    "Dear " + passengerName + ", your trip #" + id + " from " + origin + " to " + destination +
+                            " has been assigned to driver " + driverName + ". Price: $" + price);
+
+            NotificationServiceClient.notifyDriver(availableDriver.getId(),
+                    "Dear " + driverName + ", you have a new trip #" + id + " from " + origin + " to " + destination +
+                            ". Passenger: " + passengerName);
+
             return trip;
         }
     }
@@ -84,10 +125,39 @@ public class TripController {
             throw new SecurityException("Only assigned driver can update trip status");
         }
 
+        String oldStatus = trip.getStatus();
         trip.setStatus(status);
         trip.setUpdatedAt(LocalDateTime.now().toString());
 
-        if (status.equals(TripStatus.COMPLETED.name()) || status.equals(TripStatus.CANCELLED.name())) {
+        String passengerName = UserServiceClient.getPassengerName(trip.getPassengerId());
+        String driverName = UserServiceClient.getDriverName(trip.getDriverId());
+
+        if (status.equals(TripStatus.IN_PROGRESS.name())) {
+            NotificationServiceClient.notifyPassenger(trip.getPassengerId(),
+                    "Dear " + passengerName + ", driver " + driverName + " has started your trip #" + id);
+
+            NotificationServiceClient.notifyDriver(trip.getDriverId(),
+                    "Dear " + driverName + ", trip #" + id + " is now in progress");
+        }
+
+        if (status.equals(TripStatus.COMPLETED.name())) {
+            NotificationServiceClient.notifyPassenger(trip.getPassengerId(),
+                    "Dear " + passengerName + ", your trip #" + id + " is completed. Thank you for choosing us!");
+
+            NotificationServiceClient.notifyDriver(trip.getDriverId(),
+                    "Dear " + driverName + ", trip #" + id + " is completed. You are now available for new trips");
+
+            UserServiceClient.updateDriverStatus(trip.getDriverId(), "AVAILABLE");
+            System.out.println("Driver " + trip.getDriverId() + " is now AVAILABLE");
+        }
+
+        if (status.equals(TripStatus.CANCELLED.name())) {
+            NotificationServiceClient.notifyPassenger(trip.getPassengerId(),
+                    "Dear " + passengerName + ", your trip #" + id + " has been cancelled");
+
+            NotificationServiceClient.notifyDriver(trip.getDriverId(),
+                    "Dear " + driverName + ", trip #" + id + " has been cancelled");
+
             UserServiceClient.updateDriverStatus(trip.getDriverId(), "AVAILABLE");
             System.out.println("Driver " + trip.getDriverId() + " is now AVAILABLE");
         }
