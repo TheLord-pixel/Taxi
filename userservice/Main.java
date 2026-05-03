@@ -2,6 +2,8 @@ package userservice;
 
 public class Main {
     public static void main(String[] args) {
+        DatabaseConnection.getConnection();
+
         PassengerController passengerController = new PassengerController();
         DriverController driverController = new DriverController();
 
