@@ -1,4 +1,4 @@
-package userservice;
+package tripservice;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

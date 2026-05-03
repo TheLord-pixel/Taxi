@@ -1,11 +1,17 @@
 package userservice;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.List;
 
 public class PassengerController {
-    private static final ConcurrentHashMap<Long, Passenger> passengers = new ConcurrentHashMap<>();
-    private static final AtomicLong idGenerator = new AtomicLong(1);
+    private final PassengerRepository repository;
+
+    public Passenger getPassengerById(Long id) {
+        return repository.findById(id);
+    }
+
+    public PassengerController() {
+        this.repository = new PassengerRepository();
+    }
 
     public Passenger registerPassenger(String name, String email, String phone) {
         if (name == null || name.trim().isEmpty()) {
@@ -15,24 +21,31 @@ public class PassengerController {
             throw new IllegalArgumentException("Email is required");
         }
 
-        long id = idGenerator.getAndIncrement();
-        Passenger passenger = new Passenger(id, name, email, phone,
-                java.time.LocalDateTime.now().toString());
-        passengers.put(id, passenger);
+        Passenger passenger = new Passenger();
+        passenger.setName(name);
+        passenger.setEmail(email);
+        passenger.setPhone(phone);
+        passenger.setCreatedAt(java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
-        System.out.println("Passenger registered: " + name + " (ID: " + id + ")");
+        repository.save(passenger);
+
+        System.out.println("Passenger registered: " + name + " (ID: " + passenger.getId() + ")");
         return passenger;
     }
 
     public Passenger getPassenger(Long id) {
-        Passenger passenger = passengers.get(id);
+        Passenger passenger = repository.findById(id);
         if (passenger == null) {
             throw new IllegalArgumentException("Passenger not found with ID: " + id);
         }
         return passenger;
     }
 
-    public static ConcurrentHashMap<Long, Passenger> getPassengers() {
-        return passengers;
+    public List<Passenger> getAllPassengers() {
+        return repository.findAll();
+    }
+
+    public boolean passengerExists(Long id) {
+        return repository.existsById(id);
     }
 }

@@ -11,14 +11,23 @@ public class Main {
         System.out.println("USER SERVICE");
         System.out.println("=".repeat(50));
 
-        passengerController.registerPassenger("John Doe", "john@example.com", "+123456789");
-        passengerController.registerPassenger("Jane Smith", "jane@example.com", "+987654321");
+        // Проверяем, есть ли уже пассажиры
+        if (passengerController.getAllPassengers().isEmpty()) {
+            passengerController.registerPassenger("John Doe", "john@example.com", "+123456789");
+            passengerController.registerPassenger("Jane Smith", "jane@example.com", "+987654321");
+        } else {
+            System.out.println("Passengers already exist, skipping creation");
+        }
 
-        driverController.registerDriver("Mike Driver", "mike@taxi.com", "+111111111", "LIC12345");
-        driverController.registerDriver("Sarah Driver", "sarah@taxi.com", "+222222222", "LIC67890");
+        if (driverController.getAllDrivers().isEmpty()) {
+            driverController.registerDriver("Mike Driver", "mike@taxi.com", "+111111111", "LIC12345");
+            driverController.registerDriver("Sarah Driver", "sarah@taxi.com", "+222222222", "LIC67890");
+        } else {
+            System.out.println("Drivers already exist, skipping creation");
+        }
 
-        System.out.println("\nPassengers: " + PassengerController.getPassengers().size());
-        System.out.println("Drivers: " + DriverController.getDrivers().size());
+        System.out.println("\nPassengers count: " + passengerController.getAllPassengers().size());
+        System.out.println("Drivers count: " + driverController.getAllDrivers().size());
 
         Driver available = driverController.findAvailableDriver();
         if (available != null) {

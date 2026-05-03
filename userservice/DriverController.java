@@ -1,11 +1,17 @@
 package userservice;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.List;
 
 public class DriverController {
-    private static final ConcurrentHashMap<Long, Driver> drivers = new ConcurrentHashMap<>();
-    private static final AtomicLong idGenerator = new AtomicLong(1);
+    private final DriverRepository repository;
+
+    public Driver getDriverById(Long id) {
+        return repository.findById(id);
+    }
+
+    public DriverController() {
+        this.repository = new DriverRepository();
+    }
 
     public Driver registerDriver(String name, String email, String phone, String licenseNumber) {
         if (name == null || name.trim().isEmpty()) {
@@ -15,48 +21,47 @@ public class DriverController {
             throw new IllegalArgumentException("License number is required");
         }
 
-        long id = idGenerator.getAndIncrement();
-        Driver driver = new Driver(id, name, email, phone, licenseNumber,
-                DriverStatus.AVAILABLE.name(), java.time.LocalDateTime.now().toString());
-        drivers.put(id, driver);
+        Driver driver = new Driver();
+        driver.setName(name);
+        driver.setEmail(email);
+        driver.setPhone(phone);
+        driver.setLicenseNumber(licenseNumber);
+        driver.setStatus(DriverStatus.AVAILABLE.name());
+        driver.setCreatedAt(java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
-        System.out.println("Driver registered: " + name + " (ID: " + id + ")");
+        repository.save(driver);
+
+        System.out.println("Driver registered: " + name + " (ID: " + driver.getId() + ")");
         return driver;
     }
 
     public Driver getDriver(Long id) {
-        Driver driver = drivers.get(id);
+        Driver driver = repository.findById(id);
         if (driver == null) {
             throw new IllegalArgumentException("Driver not found with ID: " + id);
         }
         return driver;
     }
 
-    public Driver updateDriverStatus(Long id, String status) {
-        Driver driver = drivers.get(id);
-        if (driver == null) {
-            throw new IllegalArgumentException("Driver not found with ID: " + id);
-        }
-
-        try {
-            DriverStatus.valueOf(status.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid status. Use: AVAILABLE, BUSY, OFFLINE");
-        }
-
-        driver.setStatus(status.toUpperCase());
-        System.out.println("Driver " + id + " status updated to: " + status);
-        return driver;
+    public List<Driver> getAllDrivers() {
+        return repository.findAll();
     }
 
     public Driver findAvailableDriver() {
-        return drivers.values().stream()
-                .filter(d -> DriverStatus.AVAILABLE.name().equals(d.getStatus()))
-                .findFirst()
-                .orElse(null);
+        return repository.findAvailableDriver();
     }
 
-    public static ConcurrentHashMap<Long, Driver> getDrivers() {
-        return drivers;
+    public void updateDriverStatus(Long driverId, String status) {
+        Driver driver = repository.findById(driverId);
+        if (driver == null) {
+            throw new IllegalArgumentException("Driver not found with ID: " + driverId);
+        }
+        repository.updateStatus(driverId, status);
+        System.out.println("Driver " + driverId + " status updated to: " + status);
+    }
+
+    public Driver updateDriverStatusAndReturn(Long driverId, String status) {
+        updateDriverStatus(driverId, status);
+        return repository.findById(driverId);
     }
 }
