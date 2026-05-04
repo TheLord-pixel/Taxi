@@ -5,14 +5,17 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DatabaseConnection {
-    private static final String URL = "jdbc:postgresql://localhost:5432/database_taxi";
-    private static final String USER = "postgres";
-    private static final String PASSWORD = "root";
 
     public static Connection getConnection() {
+        String url = "jdbc:postgresql://postgres:5432/database_taxi";
+        String user = "postgres";
+        String password = "root";
+
         try {
             Class.forName("org.postgresql.Driver");
-            return DriverManager.getConnection(URL, USER, PASSWORD);
+            Connection conn = DriverManager.getConnection(url, user, password);
+            System.out.println("Connected to database: " + url);
+            return conn;
         } catch (ClassNotFoundException | SQLException e) {
             System.err.println("Database connection error: " + e.getMessage());
             return null;

@@ -112,4 +112,58 @@ public class TripController {
     public List<Trip> getAllTrips() {
         return repository.findAll();
     }
+
+    public void printStats() {
+        System.out.println("\n=== СТАТИСТИКА ===");
+        System.out.println("Всего поездок: " + getAllTrips().size());
+        System.out.println("Завершено: " + countByStatus(TripStatus.COMPLETED.name()));
+        System.out.println("Отменено: " + countByStatus(TripStatus.CANCELLED.name()));
+
+        double avgPrice = getAllTrips().stream()
+                .mapToDouble(Trip::getPrice)
+                .average()
+                .orElse(0);
+        System.out.println("Средняя цена: $" + avgPrice);
+    }
+
+    private long countByStatus(String status) {
+        return getAllTrips().stream()
+                .filter(t -> t.getStatus().equals(status))
+                .count();
+    }
+
+    public void printStatistics() {
+        List<Trip> trips = getAllTrips();
+
+        if (trips.isEmpty()) {
+            System.out.println("Нет поездок для статистики");
+            return;
+        }
+
+        long completed = trips.stream()
+                .filter(t -> TripStatus.COMPLETED.name().equals(t.getStatus()))
+                .count();
+
+        long cancelled = trips.stream()
+                .filter(t -> TripStatus.CANCELLED.name().equals(t.getStatus()))
+                .count();
+
+        double totalPrice = trips.stream()
+                .mapToDouble(Trip::getPrice)
+                .sum();
+
+        double avgPrice = trips.stream()
+                .mapToDouble(Trip::getPrice)
+                .average()
+                .orElse(0);
+
+        System.out.println("\n" + "=".repeat(50));
+        System.out.println("СТАТИСТИКА ПОЕЗДОК");
+        System.out.println("=".repeat(50));
+        System.out.println("Всего поездок: " + trips.size());
+        System.out.println("Завершено: " + completed);
+        System.out.println("Отменено: " + cancelled);
+        System.out.printf("Общая выручка: $%.2f%n", totalPrice);
+        System.out.printf("Средняя цена: $%.2f%n", avgPrice);
+    }
 }

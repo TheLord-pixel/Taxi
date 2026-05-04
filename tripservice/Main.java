@@ -34,6 +34,12 @@ public class Main {
 
         System.out.println("\nTotal trips: " + tripController.getAllTrips().size());
 
+        Thread.sleep(1000);
+
+        tripController.printStatistics();
+
+        Thread.sleep(1000);
+
         notificationService.stop();
 
         System.out.println("\nTrip Service ready!");

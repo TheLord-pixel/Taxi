@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: taxi_postgres
+    environment:
+      POSTGRES_DB: database_taxi
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile-user
+    container_name: taxi_user_service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: java -cp out:lib/postgresql-42.7.3.jar userservice.Main
+    restart: on-failure
+
+  trip-service:
+    build:
+      context: .
+      dockerfile: Dockerfile-trip
+    container_name: taxi_trip_service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: java -cp out:lib/postgresql-42.7.3.jar tripservice.Main
+    restart: on-failure
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile-notification
+    container_name: taxi_notification_service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: java -cp out:lib/postgresql-42.7.3.jar notificationservice.Main
+    restart: on-failure
+
+volumes:
+  postgres_data:

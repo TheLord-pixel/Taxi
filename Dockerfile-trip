@@ -1,0 +1,5 @@
+FROM eclipse-temurin:25-jdk
+WORKDIR /app
+COPY out/production/Taxi /app/out
+COPY lib /app/lib
+CMD ["java", "-cp", "out:lib/postgresql-42.7.3.jar", "tripservice.Main"]
