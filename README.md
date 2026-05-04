@@ -30,4 +30,4 @@ docker-compose logs user-service
 
 docker-compose logs trip-service
 
-docker-compose logs notification-service
+docker-compose logs notification-service.
