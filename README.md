@@ -30,4 +30,26 @@ docker-compose logs user-service
 
 docker-compose logs trip-service
 
-docker-compose logs notification-service.
+docker-compose logs notification-service
+
+-- Посмотреть все таблицы
+\dt
+
+-- Посмотреть пассажиров
+SELECT * FROM passengers;
+
+-- Посмотреть водителей
+SELECT * FROM drivers;
+
+-- Посмотреть поездки
+SELECT * FROM trips;
+
+-- Посмотреть уведомления
+SELECT * FROM notifications;
+
+-- Посмотреть оценки
+SELECT * FROM ratings;
+
+-- Выйти
+\q
+\c database_taxi
